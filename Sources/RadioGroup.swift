@@ -77,14 +77,14 @@ import UIKit
 
     @IBInspectable open dynamic var itemSpacing: CGFloat = 4 {
         didSet {
-            forEachItem { $0.stackView.spacing = itemSpacing }
+            forEachItem { $0.spacing = itemSpacing }
         }
     }
 
     @IBInspectable open dynamic var isButtonAfterTitle: Bool = false {
         didSet {
             let direction: UISemanticContentAttribute = isButtonAfterTitle ? .forceRightToLeft : .unspecified
-            forEachItem { $0.stackView.semanticContentAttribute = direction }
+            forEachItem { $0.semanticContentAttribute = direction }
         }
     }
 
@@ -175,10 +175,9 @@ import UIKit
     }
 }
 
-class RadioGroupItem: UIView {
+class RadioGroupItem: UIStackView {
     let titleLabel = UILabel()
     let radioButton = RadioButton()
-    let stackView = UIStackView()
 
     unowned var group: RadioGroup
 
@@ -196,7 +195,7 @@ class RadioGroupItem: UIView {
         setup()
     }
 
-    required init?(coder aDecoder: NSCoder) {
+    required init(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
@@ -209,13 +208,9 @@ class RadioGroupItem: UIView {
         if let titleColor = group.titleColor {
             titleLabel.textColor = titleColor
         }
-        let wrapper = UIView()
-        wrapper.addConstrainedSubview(titleLabel, constrain: .top, .bottom, .left, .right)
-
-        addConstrainedSubview(stackView, constrain: .left, .right, .top, .bottom)
-        stackView.addArrangedSubviews([radioButton, wrapper])
-        stackView.alignment = .center
-        setContentCompressionResistancePriority(.required, for: .vertical)
+        
+        addArrangedSubviews([radioButton, titleLabel])
+        alignment = .center
 
         addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didSelect)))
 
