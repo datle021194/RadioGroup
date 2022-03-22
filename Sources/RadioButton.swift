@@ -22,7 +22,7 @@ import UIKit
 
     @IBInspectable open dynamic var size: CGFloat = 20 {
         didSet {
-            constrain(.height, to: size)
+            addConstraintWithoutConflict(heightConstraint(size))
             layer.cornerRadius = size / 2
             updateCenterRadius()
             invalidateIntrinsicContentSize()
@@ -39,6 +39,10 @@ import UIKit
         didSet {
             layoutMargins = UIEdgeInsets(top: ringSpacing, left: ringSpacing, bottom: ringSpacing, right: ringSpacing)
             updateCenterRadius()
+            
+            selectedCenterView
+                .constraintsToSuper(ringSpacing)
+                .forEach({ addConstraintWithoutConflict($0) })
         }
     }
 
@@ -57,12 +61,18 @@ import UIKit
     private let selectedCenterView = UIView()
 
     private func setup() {
-        constrain(self, at: .width, to: self, at: .height)
+        let ratioConstraint = constraint(attribute: .width, to: self, attribute: .height)
+        addConstraintWithoutConflict(ratioConstraint)
+        
         setContentHuggingPriority(.required, for: .vertical)
         setContentHuggingPriority(.required, for: .horizontal)
         setContentCompressionResistancePriority(.required, for: .vertical)
         setContentCompressionResistancePriority(.required, for: .horizontal)
-        addConstrainedSubview(selectedCenterView, constrain: .topMargin, .bottomMargin, .leftMargin, .rightMargin)
+
+        addSubview(selectedCenterView)
+        let selectedCenterViewConstraints = selectedCenterView.constraintsToSuper(ringSpacing)
+        NSLayoutConstraint.activate(selectedCenterViewConstraints)
+
         selectedCenterView.layoutMargins = .zero
         selectedColor = { selectedColor }()
         selectedTintColor = { selectedTintColor }()

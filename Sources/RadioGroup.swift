@@ -5,7 +5,6 @@
 //  Created by Yonat Sharon on 03.02.2019.
 //
 
-import SweeterSwift
 import UIKit
 
 @IBDesignable open class RadioGroup: UIControl {
@@ -117,7 +116,9 @@ import UIKit
     }
 
     private func setup() {
-        addConstrainedSubview(stackView, constrain: .leftMargin, .rightMargin, .topMargin, .bottomMargin)
+        addSubview(stackView)
+        NSLayoutConstraint.activate(stackView.constraintsToSuper())
+        
         stackView.distribution = .equalSpacing
         setContentCompressionResistancePriority(.required, for: .vertical)
         isVertical = { isVertical }()
@@ -232,10 +233,112 @@ class RadioGroupItem: UIStackView {
     }
 }
 
-extension UIStackView {
+internal extension UIStackView {
+    
     func addArrangedSubviews(_ subviews: [UIView]) {
         for subview in subviews {
             addArrangedSubview(subview)
         }
+    }
+    
+    func removeArrangedSubviewCompletely(_ subview: UIView) {
+        removeArrangedSubview(subview)
+        subview.removeFromSuperview()
+    }
+
+    func removeAllArrangedSubviewsCompletely() {
+        for subview in arrangedSubviews.reversed() {
+            removeArrangedSubviewCompletely(subview)
+        }
+    }
+}
+
+internal extension UIView {
+    
+    var actualTintColor: UIColor {
+        var tintedView: UIView? = self
+        while let currentView = tintedView, nil == currentView.tintColor {
+            tintedView = currentView.superview
+        }
+        return tintedView?.tintColor ?? UIColor(red: 0, green: 0.5, blue: 1, alpha: 1)
+    }
+    
+    func addConstraintWithoutConflict(_ constraint: NSLayoutConstraint) {
+        removeConstraints(constraints.filter {
+            constraint.firstItem === $0.firstItem
+                && constraint.secondItem === $0.secondItem
+                && constraint.firstAttribute == $0.firstAttribute
+                && constraint.secondAttribute == $0.secondAttribute
+        })
+        addConstraint(constraint)
+    }
+    
+    func leftToSuper(relation: NSLayoutConstraint.Relation = .equal, constant: CGFloat) -> NSLayoutConstraint {
+        guard let superView = self.superview else { fatalError() }
+        
+        self.translatesAutoresizingMaskIntoConstraints = false
+        
+        return NSLayoutConstraint(item: self, attribute: .leading, relatedBy: relation, toItem: superView, attribute: .leading, multiplier: 1, constant: constant)
+    }
+    
+    func rightToSuper(relation: NSLayoutConstraint.Relation = .equal, constant: CGFloat) -> NSLayoutConstraint {
+        guard let superView = self.superview else { fatalError() }
+        
+        self.translatesAutoresizingMaskIntoConstraints = false
+        
+        return NSLayoutConstraint(item: superView, attribute: .trailing, relatedBy: relation, toItem: self, attribute: .trailing, multiplier: 1, constant: constant)
+    }
+    
+    func topToSuper(relation: NSLayoutConstraint.Relation = .equal, constant: CGFloat) -> NSLayoutConstraint {
+        guard let superView = self.superview else { fatalError() }
+        
+        self.translatesAutoresizingMaskIntoConstraints = false
+        
+        return NSLayoutConstraint(item: self, attribute: .top, relatedBy: relation, toItem: superView, attribute: .top, multiplier: 1, constant: constant)
+    }
+    
+    func bottomToSuper(relation: NSLayoutConstraint.Relation = .equal, constant: CGFloat) -> NSLayoutConstraint {
+        guard let superView = self.superview else { fatalError() }
+        
+        self.translatesAutoresizingMaskIntoConstraints = false
+        
+        return NSLayoutConstraint(item: superView, attribute: .bottom, relatedBy: relation, toItem: self, attribute: .bottom, multiplier: 1, constant: constant)
+    }
+    
+    func constraintsToSuper(_ constant: CGFloat = 0) -> [NSLayoutConstraint] {
+        let top = topToSuper(constant: constant)
+        let left = leftToSuper(constant: constant)
+        let bottom = bottomToSuper(constant: constant)
+        let right = rightToSuper(constant: constant)
+        return [top, left, bottom, right].compactMap({ $0 })
+    }
+    
+    func widthConstraint(_ constant: CGFloat, relation: NSLayoutConstraint.Relation = .equal)  -> NSLayoutConstraint {
+        self.translatesAutoresizingMaskIntoConstraints = false
+        return NSLayoutConstraint(item: self, attribute: .width, relatedBy: relation, toItem: nil, attribute: .width, multiplier: 1, constant: constant)
+    }
+    
+    func heightConstraint(_ constant: CGFloat, relation: NSLayoutConstraint.Relation = .equal) -> NSLayoutConstraint {
+        self.translatesAutoresizingMaskIntoConstraints = false
+        return NSLayoutConstraint(item: self, attribute: .height, relatedBy: relation, toItem: nil, attribute: .height, multiplier: 1, constant: constant)
+    }
+    
+    func constraint(
+        attribute firstAttribute: NSLayoutConstraint.Attribute,
+        to view: UIView,
+        attribute secondAttribute: NSLayoutConstraint.Attribute,
+        multiplier: CGFloat = 1,
+        constant: CGFloat = 0
+    ) -> NSLayoutConstraint {
+        self.translatesAutoresizingMaskIntoConstraints = false
+        return NSLayoutConstraint(
+            item: self,
+            attribute: firstAttribute,
+            relatedBy: .equal,
+            toItem: view,
+            attribute: secondAttribute,
+            multiplier: multiplier,
+            constant: constant
+        )
     }
 }
