@@ -201,8 +201,11 @@ class RadioGroupItem: UIStackView {
     }
 
     private func setup() {
-        titleLabel.numberOfLines = 0
-        titleLabel.lineBreakMode = .byWordWrapping
+        titleLabel.numberOfLines = 1
+        titleLabel.lineBreakMode = .byTruncatingTail
+        titleLabel.adjustsFontSizeToFitWidth = true
+        titleLabel.minimumScaleFactor = 0.5
+        
         if let titleFont = group.titleFont {
             titleLabel.font = titleFont
         }
